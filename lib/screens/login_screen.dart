@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
-import 'dart:async'; //3.1 
+import 'dart:async'; //3.1
+//5.1 Firebase Auth y pantalla de productos
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:login_rive_animation/screens/products_screen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -37,6 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
   String? emailError;
   String? passError;
 
+  //5.2 Estado de carga mientras Firebase responde
+  bool _isLoading = false;
+
    // 4.3 Validadores
   bool isValidEmail(String email) {
     final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -52,7 +58,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   //4.4 Acción del botón
-  void _onLogin(){
+  //5.3 Ahora es asíncrono porque espera a Firebase
+  Future<void> _onLogin() async {
     //Recortar espacios en blanco accidentales
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text;
@@ -74,11 +81,40 @@ class _LoginScreenState extends State<LoginScreen> {
     _isHandsUp?.change(false);
     _numLook?.value = 50.0;
 
-    //4.7 Activar triggers
-    if (emailTypedError == null && passTypedError == null){
-      _trigSuccess?.fire();
-    } else {
+    //4.7 Si no cumple las expresiones regulares, falla sin llamar a Firebase
+    if (emailTypedError != null || passTypedError != null){
       _trigFail?.fire();
+      return;
+    }
+
+    //5.4 Mostrar carga
+    setState(() => _isLoading = true);
+
+    try {
+      //5.5 Validar credenciales contra Firebase Auth
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: pass);
+
+      //5.6 Éxito: el oso celebra antes de navegar
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _trigSuccess?.fire();
+      await Future.delayed(const Duration(seconds: 2));
+
+      //5.7 Navegar a productos sin poder volver al login
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ProductsScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      //5.8 Credenciales no válidas: aviso general, sin marcar un campo específico
+      debugPrint('FirebaseAuth error: ${e.code}');
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _trigFail?.fire();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Credenciales incorrectas')),
+      );
     }
   }
 
@@ -246,11 +282,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)
                   ),
-                  onPressed: _onLogin,
-                  child: Text(
-                    "Login", 
-                    style: TextStyle(color: Colors.white),
-                    ),
+                  //5.9 Deshabilitado y con spinner mientras carga
+                  onPressed: _isLoading ? null : _onLogin,
+                  disabledColor: Colors.teal,
+                  child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "Login",
+                        style: TextStyle(color: Colors.white),
+                      ),
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
