@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 import 'dart:async'; //3.1
-//5.1 Firebase Auth y pantalla de productos
+//5.1 Firebase Auth y pantalla del herpetario
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:login_rive_animation/screens/products_screen.dart';
+import 'package:login_rive_animation/screens/reptiles_screen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const ProductsScreen()),
+        MaterialPageRoute(builder: (_) => const ReptilesScreen()),
       );
     } on FirebaseAuthException catch (e) {
       //5.8 Credenciales no válidas: aviso general, sin marcar un campo específico
@@ -278,13 +278,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   //Toma todo el ancho posible
                   minWidth: screenSize.width,
                   height: 50,
-                  color: Colors.teal,
+                  color: Theme.of(context).colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)
                   ),
                   //5.9 Deshabilitado y con spinner mientras carga
                   onPressed: _isLoading ? null : _onLogin,
-                  disabledColor: Colors.teal,
+                  disabledColor: Theme.of(context).colorScheme.primary,
                   child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(

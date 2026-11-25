@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:login_rive_animation/firebase_options.dart';
 import 'package:login_rive_animation/screens/login_screen.dart';
+import 'package:login_rive_animation/theme/app_theme.dart';
 
 Future<void> main() async {
   // Required before any plugin call (Firebase) happens ahead of runApp.
@@ -15,9 +16,10 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen()
+      theme: buildAppTheme(),
+      home: const LoginScreen()
     );
   }
 }
