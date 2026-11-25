@@ -36,25 +36,18 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
 
-  //4.2 Errores para mostrar en la UI
-  String? emailError;
-  String? passError;
-
   //5.2 Estado de carga mientras Firebase responde
   bool _isLoading = false;
 
-   // 4.3 Validadores
-  bool isValidEmail(String email) {
-    final re = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    return re.hasMatch(email);
-  }
+  //6.1 OWASP: un solo mensaje para cualquier fallo de login. Decir qué campo
+  // falló revelaría si el correo existe (enumeración de cuentas).
+  static const _invalidCredentials =
+      'Credenciales inválidas. Verifica tu correo y contraseña.';
 
-  bool isValidPassword(String pass) {
-    // mínimo 8, una mayúscula, una minúscula, un dígito y un especial
-    final re = RegExp(
-      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$',
-    );
-    return re.hasMatch(pass);
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   //4.4 Acción del botón
@@ -64,16 +57,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = emailCtrl.text.trim();
     final pass = passCtrl.text;
 
-    //Recalcular errores
-    final emailTypedError = isValidEmail(email) ? null : 'Email inválido';
-    final passTypedError = isValidPassword(pass) ? null : 'Contraseña inválida';
-
-    //4.5 Para mostrar el cambio
-    setState(() {
-      emailError = emailTypedError;
-      passError = passTypedError;
-    });
-
     //4.6 Cerrar el teclado y oso neutro
     FocusScope.of(context).unfocus();
     _typingDebounce?.cancel();
@@ -81,9 +64,10 @@ class _LoginScreenState extends State<LoginScreen> {
     _isHandsUp?.change(false);
     _numLook?.value = 50.0;
 
-    //4.7 Si no cumple las expresiones regulares, falla sin llamar a Firebase
-    if (emailTypedError != null || passTypedError != null){
+    //6.2 Solo se valida que no estén vacíos; las reglas viven en el registro
+    if (email.isEmpty || pass.isEmpty){
       _trigFail?.fire();
+      _showMessage('Ingresa tu correo y contraseña.');
       return;
     }
 
@@ -112,9 +96,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       _trigFail?.fire();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciales incorrectas')),
-      );
+      //6.3 Sin red no es un problema de credenciales, y no revela nada de la cuenta
+      _showMessage(e.code == 'network-request-failed'
+          ? 'Sin conexión. Revisa tu internet e inténtalo de nuevo.'
+          : _invalidCredentials);
     }
   }
 
@@ -213,7 +198,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     },
                     decoration: InputDecoration(
-                      errorText: emailError,
                       hintText: "Email",
                       prefixIcon: const Icon(Icons.email),
                       border: OutlineInputBorder(
@@ -245,7 +229,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     obscureText: _isObscure,
                     decoration: InputDecoration(
-                      errorText: passError,
                       hintText: "Password",
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
