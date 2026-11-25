@@ -4,6 +4,7 @@ import 'dart:async'; //3.1
 //5.1 Firebase Auth y pantalla del herpetario
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_rive_animation/screens/reptiles_screen.dart';
+import 'package:login_rive_animation/screens/sign_up_screen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -282,7 +283,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text("¿No tienes una cuenta?"),
-                        TextButton(onPressed: (){}, child: Text("Register", style: TextStyle(
+                        //6.4 push (no replacement) para poder regresar al login
+                        TextButton(onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                        ), child: Text("Register", style: TextStyle(
                           color: Colors.black, 
                           fontWeight: FontWeight.bold,
                           decoration: TextDecoration.underline)))
