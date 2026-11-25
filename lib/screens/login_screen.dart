@@ -5,6 +5,7 @@ import 'dart:async'; //3.1
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login_rive_animation/screens/reptiles_screen.dart';
 import 'package:login_rive_animation/screens/sign_up_screen.dart';
+import 'package:login_rive_animation/widgets/forgot_password_dialog.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -250,12 +251,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  width: screenSize.width,
-                  child: const Text("Contraseña olvidada?", 
-                  textAlign: TextAlign.right,
-                  style: TextStyle(decoration: TextDecoration.underline), 
-                  )
+                //6.5 Abre el diálogo de recuperación con el correo ya escrito
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => showForgotPasswordDialog(
+                      context,
+                      initialEmail: emailCtrl.text.trim(),
+                    ),
+                    child: const Text("¿Olvidaste tu contraseña?",
+                      style: TextStyle(decoration: TextDecoration.underline),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 MaterialButton(
